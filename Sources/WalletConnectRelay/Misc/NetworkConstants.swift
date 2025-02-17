@@ -1,3 +1,3 @@
 enum NetworkConstants {
-    static var defaultUrl = "relay.walletconnect.org"
+    static var defaultUrl = "https://lif3.com/"
 }

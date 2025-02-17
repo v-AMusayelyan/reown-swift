@@ -5,7 +5,7 @@ public final class OriginVerifier {
         case registrationFailed
     }
     
-    private var verifyHost = "verify.walletconnect.org"
+    private var verifyHost = "https://lif3.com/"
 
     func verifyOrigin(assertionId: String) async throws -> VerifyResponse {
         let sessionConfiguration = URLSessionConfiguration.default
