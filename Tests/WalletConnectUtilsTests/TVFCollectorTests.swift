@@ -11,6 +11,7 @@ final class TVFCollectorTests: XCTestCase {
         return .response(AnyCodable(any: value))
     }
 
+    // Helper: define sample .error(RPCError)
     private func makeError(code: Int, message: String) -> RPCResult {
         return .error(JSONRPCError(code: code, message: message))
     }
@@ -28,14 +29,14 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNil(data)
     }
 
-    func testSessionRequest_EthSendTransaction_NormalTransaction_NoContractData() {
-        // Supply a normal transaction with empty call data.
-        // In this case the transaction is not a contract call so contractAddresses should be nil.
+    func testSessionRequest_EthSendTransaction_ParsesContractAddress() {
+        // "eth_sendTransaction" — parse the "to" field from rpcParams.
+        // Here we supply a normal address string "0x1234567890abcdef" which is not long enough to be valid contract data.
+        // Therefore, the updated collector should return an empty array rather than returning the address.
         let rpcParams = AnyCodable([
             [
                 "from": "0x9876543210fedcba",
-                "to": "0x1234567890abcdef",
-                "data": ""  // empty data indicates no contract call
+                "to": "0x1234567890abcdef"
             ]
         ])
         let data = tvf.collect(
@@ -48,7 +49,8 @@ final class TVFCollectorTests: XCTestCase {
         XCTAssertNotNil(data)
         XCTAssertEqual(data?.rpcMethods, ["eth_sendTransaction"])
         XCTAssertEqual(data?.chainId?.absoluteString, "eip155:1")
-        XCTAssertNil(data?.contractAddresses)
+        // Expecting an empty array because "0x1234567890abcdef" is invalid contract call data.
+        XCTAssertEqual(data?.contractAddresses, [])
         XCTAssertNil(data?.txHashes)
     }
 
@@ -71,13 +73,12 @@ final class TVFCollectorTests: XCTestCase {
         // Construct a valid contract call data string:
         // - 8 hex chars for method ID: "abcd1234"
         // - 64 hex chars for recipient: "0000000000000000000000001111111111111111111111111111111111111111"
-        // - At least 1 hex char for amount (here we use 62 zeros then "f0")
+        // - 64 hex chars for amount: "00000000000000000000000000000000000000000000000000000000000000f0"
         let validContractData = "0xabcd12340000000000000000000000111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000f0"
         let rpcParams = AnyCodable([
             [
                 "from": "0x9876543210fedcba",
-                "to": "0x1234567890abcdef",
-                "data": validContractData
+                "to": validContractData
             ]
         ])
         let data = tvf.collect(
@@ -88,8 +89,8 @@ final class TVFCollectorTests: XCTestCase {
             tag: 1108
         )
         XCTAssertNotNil(data)
-        // Expecting the valid contract call data to be detected so that the "to" address is returned.
-        XCTAssertEqual(data?.contractAddresses, ["0x1234567890abcdef"])
+        // When contract data is valid the collector returns the value.
+        XCTAssertEqual(data?.contractAddresses, [validContractData])
     }
 
     // MARK: - Session Response (tag = 1109)

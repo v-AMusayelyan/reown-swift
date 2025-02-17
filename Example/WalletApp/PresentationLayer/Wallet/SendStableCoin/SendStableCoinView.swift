@@ -36,12 +36,7 @@ extension View {
 
 struct SendStableCoinView: View {
     @ObservedObject var presenter: SendStableCoinPresenter
-
-    /// Controls whether the network selection dialog is shown
     @State private var showNetworkPicker = false
-
-    /// Tracks whether the amount TextField is currently focused
-    @FocusState private var amountFieldIsFocused: Bool
 
     var body: some View {
         VStack(spacing: 24) {
@@ -141,21 +136,9 @@ struct SendStableCoinView: View {
                         .foregroundColor(.gray)
 
                     HStack {
-                        // The amount TextField, with decimal keyboard
                         TextField("0.00", text: $presenter.amount)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
-                            .focused($amountFieldIsFocused)
-                            // Add a toolbar with "Done" to dismiss the keyboard
-                            .toolbar {
-                                ToolbarItemGroup(placement: .keyboard) {
-                                    Spacer()
-                                    Button("Done") {
-                                        // Unfocus the text field => dismiss keyboard
-                                        amountFieldIsFocused = false
-                                    }
-                                }
-                            }
 
                         Button {
                             showNetworkPicker = true
@@ -224,7 +207,7 @@ struct SendStableCoinView: View {
             .padding()
         }
         .padding()
-        .hideKeyboardOnTap() // Tap anywhere to dismiss keyboard
+        .hideKeyboardOnTap()
         // Present success screen when transaction completes
         .sheet(isPresented: $presenter.transactionCompleted) {
             SendStableCoinCompletedView(presenter: presenter)

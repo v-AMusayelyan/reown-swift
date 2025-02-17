@@ -163,18 +163,16 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
             ActivityIndicatorManager.shared.start()
 
-            let routeResponseSuccess = try await WalletKit.instance.ChainAbstraction.prepare(
+            let routeResponseSuccess = try await WalletKit.instance.prepare(
                 chainId: selectedNetwork.chainId.absoluteString,
                 from: importAccount.account.address,
-                call: call,
-                localCurrency: .usd
+                call: call
             )
-
             await MainActor.run {
                 switch routeResponseSuccess {
                 case .success(let routeResponse):
                     switch routeResponse {
-                    case .available(let UiFileds):
+                    case .available(let routeResponseAvailable):
                         // If the route is available, present a CA transaction flow
                         // We consider this a success scenario for saving the recipient
                         self.saveRecipientToUserDefaults()
@@ -184,7 +182,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
                             from: importAccount.account.address,
                             chainId: selectedNetwork.chainId,
                             importAccount: importAccount,
-                            uiFields: UiFileds
+                            routeResponseAvailable: routeResponseAvailable
                         )
                     case .notRequired:
                         // Possibly handle a scenario where no special routing is needed
@@ -218,9 +216,8 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
             accountAddress: recipient
         )
 
-        // 1) Normalize the decimal separator and try to convert to Decimal
-        let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
-        guard let decimalAmount = Decimal(string: normalizedAmount) else {
+        // 1) Convert the "amount" string to a Decimal
+        guard let decimalAmount = Decimal(string: amount) else {
             throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
                 NSLocalizedDescriptionKey: "Invalid numeric input: \(amount)"
             ])
@@ -228,19 +225,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
 
         // USDC/USDT => 6 decimals
         let baseUnitsDecimal = decimalAmount * Decimal(1_000_000)
-
-        // Use a number formatter to ensure consistent string conversion
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 0 // No decimal places for base units
-        formatter.groupingSeparator = "" // No thousand separators
-        formatter.decimalSeparator = "." // Force decimal point
-
-        guard let baseUnitsString = formatter.string(from: NSDecimalNumber(decimal: baseUnitsDecimal)) else {
-            throw NSError(domain: "SendStableCoinPresenter", code: 0, userInfo: [
-                NSLocalizedDescriptionKey: "Failed to convert amount to string"
-            ])
-        }
+        let baseUnitsString = NSDecimalNumber(decimal: baseUnitsDecimal).stringValue
 
         // 2) Determine which contract address to use
         let tokenAddress: String
@@ -248,6 +233,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         case .usdc:
             tokenAddress = selectedNetwork.usdcContractAddress
         case .usdt:
+            // already checked if .Base => throw error => must not get here if base
             tokenAddress = selectedNetwork.usdtContractAddress
         }
 
@@ -259,6 +245,7 @@ final class SendStableCoinPresenter: ObservableObject, SceneViewModel {
         )
         return call
     }
+
     /// Persists the latest recipient in UserDefaults
     private func saveRecipientToUserDefaults() {
         userDefaults.set(recipient, forKey: recipientKey)

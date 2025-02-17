@@ -40,7 +40,7 @@ public class Networking {
     ///   - socketFactory: web socket factory
     ///   - socketConnectionType: socket connection type
     static public func configure(
-        relayHost: String = "https://lif3.com/",
+        relayHost: String = "relay.walletconnect.org",
         groupIdentifier: String,
         projectId: String,
         socketFactory: WebSocketFactory,

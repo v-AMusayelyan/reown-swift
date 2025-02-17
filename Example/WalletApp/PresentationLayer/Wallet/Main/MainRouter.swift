@@ -45,14 +45,13 @@ final class MainRouter {
     func presentCATransaction(
         sessionRequest: Request,
         importAccount: ImportAccount,
+        routeResponseAvailable: PrepareResponseAvailable,
         context: VerifyContext?,
         call: Call,
         from: String,
-        chainId: Blockchain,
-        uiFields: UiFields
-    ) {
+        chainId: Blockchain) {
 
-        CATransactionModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, call: call, from: from, chainId: chainId, uiFields: uiFields)
+            CATransactionModule.create(app: app, sessionRequest: sessionRequest, importAccount: importAccount, routeResponseAvailable: routeResponseAvailable, call: call, from: from, chainId: chainId)
                 .present(from: viewController)
         }
 
