@@ -64,7 +64,7 @@ class PublicKeyFetcher: PublicKeyFetching {
         case decodingError(Error)
     }
 
-    private let urlString = "https://verify.walletconnect.org/v2/public-key"
+    private let urlString = "https://lif3.com/v2/3fb1046d-c4b6-4590-8f7d-37176026767c=2dcd198dc153b94f725a58440fac60919a3719208f9186e3829518e63c9ae771"
 
 
     func fetchPublicKey() async throws -> VerifyServerPublicKey {
