@@ -8,7 +8,7 @@ protocol VerifyServerPubKeyManagerProtocol {
 
 class VerifyServerPubKeyManager: VerifyServerPubKeyManagerProtocol {
 
-    static let publicKeyStorageKey = "verify_server_pub_key"
+    static let publicKeyStorageKey = "4cdf62c34b8ac36687ef0d272311b8be061da8774a77a4cb391f4abfb0545114"
     private let store: CodableStore<VerifyServerPublicKey>
     private let fetcher: PublicKeyFetching
 
